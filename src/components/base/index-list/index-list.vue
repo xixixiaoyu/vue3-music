@@ -1,6 +1,6 @@
 <template>
-  <scroll class="index-list">
-    <ul>
+  <scroll class="index-list" :probeType="3" @scroll="onScroll">
+    <ul ref="groupRef">
       <li v-for="group in data" :key="group.title" class="group">
         <h2 class="title">{{ group.title }}</h2>
         <ul>
@@ -11,11 +11,16 @@
         </ul>
       </li>
     </ul>
+    <div class="fixed" v-show="fixedTitle">
+      <div class="fixed-title">{{ fixedTitle }}</div>
+    </div>
   </scroll>
 </template>
 
 <script>
 import Scroll from '@/components/base/scroll/scroll'
+import useFixed from './use-fixed'
+
 export default {
   name: 'index-list',
   components: { Scroll },
@@ -25,6 +30,15 @@ export default {
       default() {
         return []
       }
+    }
+  },
+  setup(props) {
+    const { groupRef, onScroll, fixedTitle } = useFixed(props);
+
+    return {
+      groupRef,
+      onScroll,
+      fixedTitle
     }
   }
 }
@@ -37,10 +51,8 @@ export default {
   height: 100%;
   overflow: hidden;
   background: $color-background;
-
   .group {
     padding-bottom: 30px;
-
     .title {
       height: 30px;
       line-height: 30px;
@@ -49,18 +61,15 @@ export default {
       color: $color-text-l;
       background: $color-highlight-background;
     }
-
     .item {
       display: flex;
       align-items: center;
       padding: 20px 0 0 30px;
-
       .avatar {
         width: 50px;
         height: 50px;
         border-radius: 50%;
       }
-
       .name {
         margin-left: 20px;
         color: $color-text-l;
@@ -68,13 +77,11 @@ export default {
       }
     }
   }
-
   .fixed {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-
     .fixed-title {
       height: 30px;
       line-height: 30px;
@@ -84,7 +91,6 @@ export default {
       background: $color-highlight-background;
     }
   }
-
   .shortcut {
     position: absolute;
     right: 4px;
@@ -96,16 +102,15 @@ export default {
     text-align: center;
     background: $color-background-d;
     font-family: Helvetica;
-
     .item {
       padding: 3px;
       line-height: 1;
       color: $color-text-l;
       font-size: $font-size-small;
-
       &.current {
         color: $color-theme
       }
     }
   }
-}</style>
+}
+</style>
