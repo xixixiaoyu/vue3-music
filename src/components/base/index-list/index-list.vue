@@ -14,12 +14,22 @@
     <div class="fixed" v-show="fixedTitle" :style="fixedStyle">
       <div class="fixed-title">{{ fixedTitle }}</div>
     </div>
+
+    <div class="shortcut">
+      <ul>
+        <li v-for="(item, index) in shortcutList" :key="item" :data-index="index" class="item"
+          :class="{ 'current': currentIndex === index }">
+          {{ item }}
+        </li>
+      </ul>
+    </div>
   </scroll>
 </template>
 
 <script>
 import Scroll from '@/components/base/scroll/scroll'
 import useFixed from './use-fixed'
+import useShortcut from './use-shortcut'
 
 export default {
   name: 'index-list',
@@ -33,13 +43,17 @@ export default {
     }
   },
   setup(props) {
-    const { groupRef, onScroll, fixedTitle, fixedStyle } = useFixed(props);
+    const { groupRef, onScroll, fixedTitle, fixedStyle, currentIndex } = useFixed(props);
+
+    const { shortcutList } = useShortcut(props);
 
     return {
       groupRef,
       onScroll,
       fixedTitle,
-      fixedStyle
+      fixedStyle,
+      currentIndex,
+      shortcutList
     }
   }
 }
@@ -52,8 +66,10 @@ export default {
   height: 100%;
   overflow: hidden;
   background: $color-background;
+
   .group {
     padding-bottom: 30px;
+
     .title {
       height: 30px;
       line-height: 30px;
@@ -62,15 +78,18 @@ export default {
       color: $color-text-l;
       background: $color-highlight-background;
     }
+
     .item {
       display: flex;
       align-items: center;
       padding: 20px 0 0 30px;
+
       .avatar {
         width: 50px;
         height: 50px;
         border-radius: 50%;
       }
+
       .name {
         margin-left: 20px;
         color: $color-text-l;
@@ -78,11 +97,13 @@ export default {
       }
     }
   }
+
   .fixed {
     position: absolute;
     top: -1px;
     left: 0;
     width: 100%;
+
     .fixed-title {
       height: 30px;
       line-height: 30px;
@@ -92,6 +113,7 @@ export default {
       background: $color-highlight-background;
     }
   }
+
   .shortcut {
     position: absolute;
     right: 4px;
@@ -103,15 +125,16 @@ export default {
     text-align: center;
     background: $color-background-d;
     font-family: Helvetica;
+
     .item {
       padding: 3px;
       line-height: 1;
       color: $color-text-l;
       font-size: $font-size-small;
+
       &.current {
         color: $color-theme
       }
     }
   }
-}
-</style>
+}</style>
