@@ -11,7 +11,7 @@
         </ul>
       </li>
     </ul>
-    <div class="fixed" v-show="fixedTitle">
+    <div class="fixed" v-show="fixedTitle" :style="fixedStyle">
       <div class="fixed-title">{{ fixedTitle }}</div>
     </div>
   </scroll>
@@ -33,12 +33,13 @@ export default {
     }
   },
   setup(props) {
-    const { groupRef, onScroll, fixedTitle } = useFixed(props);
+    const { groupRef, onScroll, fixedTitle, fixedStyle } = useFixed(props);
 
     return {
       groupRef,
       onScroll,
-      fixedTitle
+      fixedTitle,
+      fixedStyle
     }
   }
 }
@@ -79,7 +80,7 @@ export default {
   }
   .fixed {
     position: absolute;
-    top: 0;
+    top: -1px;
     left: 0;
     width: 100%;
     .fixed-title {
