@@ -4,7 +4,7 @@
     <!--    路由实现过渡效果-->
     <router-view v-slot="{Component}">
       <transition appear name="slide">
-        <component :is="Component" :data="selectedSinger"/>
+        <component :is="Component" :singer="selectedSinger"/>
       </transition>
     </router-view>
   </div>
