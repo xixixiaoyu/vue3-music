@@ -46,6 +46,9 @@ export default {
     const fullScreen = computed(() => store.state.fullScreen)
     const currentSong = computed(() => store.getters.currentSong)
     const playing = computed(() => store.state.playing)
+    const currentIndex = computed(() => store.state.currentIndex)
+    const playlist = computed(() => store.state.playlist)
+
     const playIcon = computed(() => {
       return playing.value ? "icon-pause" : "icon-play"
     })
@@ -78,12 +81,46 @@ export default {
       store.commit('setPlayingState', false)
     }
 
-    function error() {
-
+    function prev() {
+      const list = playlist.value
+      const length = list.length
+      if(!length) return
+      if(length === 1) {
+        loop()
+      } else {
+        let index = currentIndex.value - 1
+        if(index === -1) {
+          index = length - 1
+        }
+        store.commit('setCurrentIndex', index)
+        if (!playing.value) {
+          store.commit('setPlayingState', true)
+        }
+      }
     }
 
-    function ready() {
+    function next() {
+      const list = playlist.value
+      const length = list.length
+      if(!length) return
+      if(length === 1) {
+        loop()
+      } else {
+        let index = currentIndex.value + 1
+        if(index === length) {
+          index = 0
+        }
+        store.commit('setCurrentIndex', index)
+        if (!playing.value) {
+          store.commit('setPlayingState', true)
+        }
+      }
+    }
 
+    function loop() {
+      const audioEl = audioRef.value
+      audioEl.currentTime = 0
+      audioEl.play()
     }
 
     return {
@@ -94,8 +131,8 @@ export default {
       togglePlay,
       playIcon,
       pause,
-      error,
-      ready
+      prev,
+      next
     }
   }
 }

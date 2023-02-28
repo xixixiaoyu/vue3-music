@@ -137,8 +137,8 @@ export default {
       // better-scroll向上滚动是负值，所以取负为正值
       this.scrollY = -pos.y
     },
-    selectItem({song, index}) {
-      this.selectPlay({list: this.songs, index})
+    selectItem({ song, index }) {
+      this.selectPlay({ list: this.songs, index })
     },
     random() {
       this.randomPlay(this.songs)
