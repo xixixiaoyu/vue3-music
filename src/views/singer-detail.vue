@@ -13,6 +13,9 @@
 import { getSingerDetail } from '@/service/singer'
 import { processSongs } from '@/service/song'
 import MusicList from '@/components/music-list/music-list'
+import storage from 'good-storage'
+import { SINGER_KEY } from '@/assets/js/constant'
+
 export default {
   name: 'singer-detail',
   components: {
@@ -28,16 +31,37 @@ export default {
     }
   },
   computed: {
+    computedSinger() {
+      let res = null;
+      if(this.singer) {
+        res = this.singer;
+      }else {
+        const cacheSinger = storage.session.get(SINGER_KEY);
+        if(cacheSinger && cacheSinger.mid === this.$route.params.id) {
+          res = cacheSinger;
+        }
+      }
+      return res;
+    },
     pic() {
-      return this.singer && this.singer.pic
+      const singer = this.computedSinger;
+      return singer && singer.pic;
     },
     title() {
-      return this.singer && this.singer.name
+      const singer = this.computedSinger;
+      return singer && singer.name;
     }
   },
   async created() {
+    if(!this.computedSinger) {
+      const path = this.$route.matched[0].path;
+      this.$router.push({
+        path
+      });
+      return;
+    }
     // 获取歌手详情页数据
-    const result = await getSingerDetail(this.singer)
+    const result = await getSingerDetail(this.computedSinger)
     this.songs = await processSongs(result.songs)
     this.loading = false
   }
