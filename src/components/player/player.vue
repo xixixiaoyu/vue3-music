@@ -45,6 +45,10 @@ export default {
     const store = useStore()
     const fullScreen = computed(() => store.state.fullScreen)
     const currentSong = computed(() => store.getters.currentSong)
+    const playing = computed(() => store.state.playing)
+    const playIcon = computed(() => {
+      return playing.value ? "icon-pause" : "icon-play"
+    })
 
     const audioRef = ref(null)
 
@@ -57,15 +61,41 @@ export default {
       audioEl.play()
     })
 
+    watch(playing, (newPlaying) => {
+      const audioEl = audioRef.value
+      newPlaying ? audioEl.play() : audioEl.pause()
+    })
+
     function goBack() {
       store.commit("setFullScreen", false)
+    }
+
+    function togglePlay() {
+      store.commit('setPlayingState', !playing.value)
+    }
+
+    function pause() {
+      store.commit('setPlayingState', false)
+    }
+
+    function error() {
+
+    }
+
+    function ready() {
+
     }
 
     return {
       fullScreen,
       currentSong,
       audioRef,
-      goBack
+      goBack,
+      togglePlay,
+      playIcon,
+      pause,
+      error,
+      ready
     }
   }
 }
