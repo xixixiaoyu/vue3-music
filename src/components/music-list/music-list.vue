@@ -5,24 +5,25 @@
     </div>
     <h1 class="title">{{ title }}</h1>
     <div class="bg-image" :style="bgImageStyle" ref="bgImage">
+      <div class="play-btn-wrapper" :style="playBtnStyle">
+        <div v-show="songs.length > 0" class="play-btn" @click="random">
+          <i class="icon-play"></i>
+          <span class="text">随机播放全部</span>
+        </div>
+      </div>
       <div class="filter" :style="filterStyle"></div>
     </div>
-    <scroll
-      class="list"
-      :style="scrollStyle"
-      v-loading="loading"
-      v-no-result[noResultText]="noResult"
-      :probe-type="3"
-      @scroll="onScroll"
-    >
+    <scroll class="list" :style="scrollStyle" v-loading="loading" v-no-result[noResultText]="noResult" :probe-type="3"
+      @scroll="onScroll">
       <div class="song-list-wrapper">
-        <song-list :songs="songs"></song-list>
+        <song-list :songs="songs" @select="selectItem"></song-list>
       </div>
     </scroll>
   </div>
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 import Scroll from '@/components/base/scroll/scroll'
 import SongList from '@/components/base/song-list/song-list'
 // 滚动到顶部时，顶部的图片覆盖距离
@@ -107,7 +108,18 @@ export default {
       }
     },
     noResult() {
-      return !this.loading && !this.songs.length;
+      return !this.loading && !this.songs.length
+    },
+    playBtnStyle() {
+      let display = ""
+      if(this.scrollY >= this.maxTranslateY) {
+        display = "none"
+      } else {
+        display = "block"
+      }
+      return {
+        display
+      }
     }
   },
   mounted() {
@@ -124,7 +136,14 @@ export default {
     onScroll(pos) {
       // better-scroll向上滚动是负值，所以取负为正值
       this.scrollY = -pos.y
-    }
+    },
+    selectItem({song, index}) {
+      this.selectPlay({list: this.songs, index})
+    },
+    random() {
+      this.randomPlay(this.songs)
+    },
+    ...mapActions(['selectPlay', 'randomPlay'])
   }
 }
 </script>
@@ -133,12 +152,14 @@ export default {
 .music-list {
   position: relative;
   height: 100%;
+
   .back {
     position: absolute;
     top: 0;
     left: 6px;
     z-index: 20;
     transform: translateZ(2px);
+
     .icon-back {
       display: block;
       padding: 10px;
@@ -146,6 +167,7 @@ export default {
       color: $color-theme;
     }
   }
+
   .title {
     position: absolute;
     top: 0;
@@ -159,16 +181,19 @@ export default {
     font-size: $font-size-large;
     color: $color-text;
   }
+
   .bg-image {
     position: relative;
     width: 100%;
     transform-origin: top;
     background-size: cover;
+
     .play-btn-wrapper {
       position: absolute;
       bottom: 20px;
       z-index: 10;
       width: 100%;
+
       .play-btn {
         box-sizing: border-box;
         width: 135px;
@@ -180,18 +205,21 @@ export default {
         border-radius: 100px;
         font-size: 0;
       }
+
       .icon-play {
         display: inline-block;
         vertical-align: middle;
         margin-right: 6px;
         font-size: $font-size-medium-x;
       }
+
       .text {
         display: inline-block;
         vertical-align: middle;
         font-size: $font-size-small;
       }
     }
+
     .filter {
       position: absolute;
       top: 0;
@@ -201,11 +229,13 @@ export default {
       background: rgba(7, 17, 27, 0.4);
     }
   }
+
   .list {
     position: absolute;
     bottom: 0;
     width: 100%;
     z-index: 0;
+
     .song-list-wrapper {
       padding: 20px 30px;
       background: $color-background;
