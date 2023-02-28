@@ -29,6 +29,21 @@ if (historySongs.length > 0) {
   })
 }
 
-createApp(App).use(store).use(router).use(lazyPlugin, {
-  loading: require('@/assets/images/default.png')
-}).directive('loading', loadingDirective).directive('no-result', noResultDirective).mount('#app')
+// 使用插件
+function usePlugin() {
+  return createApp(App)
+    .use(store)
+    .use(router)
+    .use(lazyPlugin, {
+      loading: require('@/assets/images/default.png')
+    })
+}
+
+// 注册自定义指令
+function signDirective() {
+  return usePlugin()
+    .directive('loading', loadingDirective)
+    .directive('noResult', noResultDirective)
+}
+
+signDirective().mount('#app')
