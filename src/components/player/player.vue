@@ -38,101 +38,150 @@
 <script>
 import { computed, watch, ref } from 'vue'
 import { useStore } from 'vuex'
-
 export default {
-  name: "player",
+  name: 'player',
   setup() {
+    // 获取vuex中保存的数据
     const store = useStore()
-    const fullScreen = computed(() => store.state.fullScreen)
-    const currentSong = computed(() => store.getters.currentSong)
-    const playing = computed(() => store.state.playing)
-    const currentIndex = computed(() => store.state.currentIndex)
-    const playlist = computed(() => store.state.playlist)
-
-    const playIcon = computed(() => {
-      return playing.value ? "icon-pause" : "icon-play"
-    })
-
+    // 播放器dom
     const audioRef = ref(null)
-
-    watch(currentSong, (newSong) => {
-      if(!newSong.id || !newSong.url) {
+    // 歌曲加载部分加载是否完成
+    const songReady = ref(false)
+    // 全屏模式
+    const fullScreen = computed(() => store.state.fullScreen)
+    // 当前播放歌曲
+    const currentSong = computed(() => store.getters.currentSong)
+    // 当前播放状态
+    const playing = computed(() => store.state.playing)
+    // 当前播放歌曲的索引
+    const currentIndex = computed(() => store.state.currentIndex)
+    // 当前播放列表
+    const playlist = computed(() => store.state.playlist)
+    // 播放按钮class
+    const playIcon = computed(() => {
+      return playing.value ? 'icon-pause' : 'icon-play'
+    })
+    // 按钮禁用class
+    const disableCls = computed(() => {
+      return songReady.value ? '' : 'disable'
+    })
+    // 监听当前播放歌曲
+    watch(currentSong, newSong => {
+      // 歌曲不存在或无法播放返回
+      if (!newSong.id || !newSong.url) {
         return
       }
+      // 歌曲加载状态置为未完成 false
+      songReady.value = false
       const audioEl = audioRef.value
+      // 播放歌曲
       audioEl.src = newSong.url
       audioEl.play()
     })
-
-    watch(playing, (newPlaying) => {
+    // 监听播放状态
+    watch(playing, newPlaying => {
+      // 加载未完成直接返回
+      // 首次加载的时候这个watch中的audioEl.play()也会被执行
+      // 因为歌曲加载时异步的，此时歌曲还没加载完成，所以执行audioEl.play()会报错
+      // 所以增加songReady字段来表示歌曲是否加载到可以播放的程度
+      if (!songReady.value) {
+        return
+      }
       const audioEl = audioRef.value
+      // 切换播放暂停
       newPlaying ? audioEl.play() : audioEl.pause()
     })
-
+    // 收起全屏
     function goBack() {
-      store.commit("setFullScreen", false)
+      store.commit('setFullScreen', false)
     }
-
+    // 切换播放状态
     function togglePlay() {
+      // 未就绪时不可切换
+      if (!songReady.value) return
       store.commit('setPlayingState', !playing.value)
     }
-
+    // 暂停播放
     function pause() {
       store.commit('setPlayingState', false)
     }
-
+    // 播放上一首歌曲
     function prev() {
       const list = playlist.value
       const length = list.length
-      if(!length) return
-      if(length === 1) {
+      // 无歌曲和歌曲未就绪时返回
+      if (!songReady.value || !length) return
+      // 播放列表只有一首歌曲时循环播放
+      if (length === 1) {
         loop()
       } else {
         let index = currentIndex.value - 1
-        if(index === -1) {
+        // 边界处理 已经时第一首歌则播放列表末尾歌曲
+        if (index === -1) {
           index = length - 1
         }
+        // 修改当前播放歌曲索引
         store.commit('setCurrentIndex', index)
+        // 在暂停状态切换歌曲则播放歌曲
         if (!playing.value) {
           store.commit('setPlayingState', true)
         }
       }
     }
-
+    // 播放下一首歌曲
     function next() {
       const list = playlist.value
       const length = list.length
-      if(!length) return
-      if(length === 1) {
+      // 无歌曲和歌曲未就绪时返回
+      if (!songReady.value || !length) return
+      // 播放列表只有一首歌曲时循环播放
+      if (length === 1) {
         loop()
       } else {
+        // 当前播放歌曲索引 + 1
         let index = currentIndex.value + 1
-        if(index === length) {
+        // 边界处理 超过播放列表则从头开始播放
+        if (index === length) {
           index = 0
         }
+        // 修改当前播放歌曲索引
         store.commit('setCurrentIndex', index)
+        // 在暂停状态切换歌曲则播放歌曲
         if (!playing.value) {
           store.commit('setPlayingState', true)
         }
       }
     }
-
+    // 循环播放
     function loop() {
       const audioEl = audioRef.value
       audioEl.currentTime = 0
       audioEl.play()
     }
-
+    // 歌曲加载完成允许播放触发事件
+    function ready() {
+      if (songReady.value) {
+        return
+      }
+      songReady.value = true
+    }
+    // 歌曲加载错误触发事件，将加载状态置为结束
+    function error() {
+      songReady.value = true
+    }
     return {
-      fullScreen,
-      currentSong,
-      audioRef,
-      goBack,
-      togglePlay,
-      playIcon,
-      pause,
+      error,
+      disableCls,
+      ready,
       prev,
-      next
+      next,
+      pause,
+      playIcon,
+      togglePlay,
+      goBack,
+      audioRef,
+      fullScreen,
+      currentSong
     }
   }
 }
