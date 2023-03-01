@@ -13,21 +13,21 @@ import { processSongs } from '@/service/song'
 import '@/assets/scss/index.scss'
 
 // 全局更新store中的缓存数据，解决缓存歌曲URL过期问题
-const favoriteSongs = load(FAVORITE_KEY)
-if (favoriteSongs.length > 0) {
-  processSongs(favoriteSongs).then((songs) => {
-    store.commit('setFavoriteList', songs)
-    saveAll(songs, FAVORITE_KEY)
-  })
-}
+// const favoriteSongs = load(FAVORITE_KEY)
+// if (favoriteSongs.length > 0) {
+//   processSongs(favoriteSongs).then((songs) => {
+//     store.commit('setFavoriteList', songs)
+//     saveAll(songs, FAVORITE_KEY)
+//   })
+// }
 
-const historySongs = load(PLAY_KEY)
-if (historySongs.length > 0) {
-  processSongs(historySongs).then((songs) => {
-    store.commit('setPlayHistory', songs)
-    saveAll(songs, PLAY_KEY)
-  })
-}
+// const historySongs = load(PLAY_KEY)
+// if (historySongs.length > 0) {
+//   processSongs(historySongs).then((songs) => {
+//     store.commit('setPlayHistory', songs)
+//     saveAll(songs, PLAY_KEY)
+//   })
+// }
 
 // 使用插件
 function usePlugin() {

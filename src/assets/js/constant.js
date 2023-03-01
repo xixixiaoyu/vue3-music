@@ -4,6 +4,7 @@ export const ALBUM_KEY = '__album__'
 export const TOP_KEY = '__top__'
 export const SEARCH_KEY = '__search__'
 export const PLAY_KEY = '__play__'
+export const FAVORITE_MAXLEN = 100
 
 export const PLAY_MODE = {
   sequence: 0,
