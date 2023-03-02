@@ -1,7 +1,7 @@
 <template>
   <div class="progress-bar" @click="onClick">
     <div class="bar-inner">
-      <div class="progress" ref="innerProgressRef" :style="progressStyle"></div>
+      <div class="progress" ref="progress" :style="progressStyle"></div>
       <div
         class="progress-btn-wrapper"
         :style="btnStyle"
@@ -44,7 +44,29 @@ export default {
       const barWidth = this.$el.clientWidth - progressBarWidth
       this.offset = barWidth * newProgress
     }
-  }
+  },
+  created() {
+    this.touch = {}
+  },
+  methods: {
+    onTouchStart(e) {
+      this.touch.x1 = e.touches[0].pageX
+      this.touch.beginWidth = this.$refs.progress.clientWidth
+    },
+    onTouchMove(e) {
+      const delta = e.touches[0].pageX - this.touch.x1
+      const tempWidth = this.touch.beginWidth + delta
+      const barWidth = this.$el.clientWidth - progressBarWidth
+      const progress = Math.min(1, Math.max(0, tempWidth / barWidth))
+      this.offset = barWidth * progress
+      this.$emit("progress-changing", progress)
+    },
+    onTouchEnd() {
+      const barWidth = this.$el.clientWidth - progressBarWidth
+      const progress = this.$refs.progress.clientWidth / barWidth
+      this.$emit("progress-changed", progress)
+    }
+  },
 }
 </script>
 

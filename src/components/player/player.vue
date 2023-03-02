@@ -15,9 +15,10 @@
         <div class="progress-wrapper">
           <span class="time time-l">{{ formatTime(currentTime) }}</span>
           <div class="progress-bar-wrapper">
-            <progress-bar :progress="progress" 
-                          @progress-changing="onProgressChanging"
-                          @progress-changed="onProgressChanged">
+            <progress-bar 
+              :progress="progress" 
+              @progress-changing="onProgressChanging"
+              @progress-changed="onProgressChanged">
             </progress-bar>
           </div>
           <span class="time time-r">{{
@@ -43,7 +44,13 @@
         </div>
       </div>
     </div>
-    <audio ref="audioRef" @pause="pause" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
+    <audio 
+      ref="audioRef" 
+      @pause="pause" 
+      @canplay="ready" 
+      @error="error" 
+      @timeupdate="updateTime" 
+      @ended="end"></audio>
   </div>
 </template>
 
