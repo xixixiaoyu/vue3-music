@@ -12,6 +12,18 @@
         <h2 class="subtitle">{{ currentSong.singer }}</h2>
       </div>
       <div class="bottom">
+        <div class="progress-wrapper">
+          <span class="time time-l">{{ formatTime(currentTime) }}</span>
+          <div class="progress-bar-wrapper">
+            <progress-bar :progress="progress" 
+                          @progress-changing="onProgressChanging"
+                          @progress-changed="onProgressChanged">
+            </progress-bar>
+          </div>
+          <span class="time time-r">{{
+            formatTime(currentSong.duration)
+          }}</span>
+        </div>
         <div class="operators">
           <div class="icon i-left">
             <i :class="modeIcon" @click="changeMode"></i>
@@ -31,7 +43,7 @@
         </div>
       </div>
     </div>
-    <audio ref="audioRef" @pause="pause" @canplay="ready" @error="error"></audio>
+    <audio ref="audioRef" @pause="pause" @canplay="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -40,9 +52,15 @@ import { computed, watch, ref } from 'vue'
 import { useStore } from 'vuex'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
+import ProgressBar from './progress-bar'
+import { formatTime } from '@/assets/js/util'
+import { PLAY_MODE } from '@/assets/js/constant'
 
 export default {
   name: 'player',
+  components: {
+    ProgressBar
+  },
   setup() {
     // 获取vuex中保存的数据
     const store = useStore()
@@ -50,6 +68,8 @@ export default {
     const audioRef = ref(null)
     // 歌曲加载部分加载是否完成
     const songReady = ref(false)
+    // 当前播放时间
+    const currentTime = ref(0)
     // 全屏模式
     const fullScreen = computed(() => store.state.fullScreen)
     // 当前播放歌曲
@@ -68,12 +88,16 @@ export default {
     const disableCls = computed(() => {
       return songReady.value ? '' : 'disable'
     })
+    // 当前播放进度
+    const progress = computed(() => {
+      return currentTime.value / currentSong.value.duration
+    })
 
-   // 封装切换播放模式逻辑
-   const { modeIcon, changeMode } = useMode()
+    // 封装切换播放模式逻辑
+    const { modeIcon, changeMode } = useMode()
 
-   // 封装收藏逻辑
-   const { getFavoriteIcon, toggleFavorite } = useFavorite()
+    // 封装收藏逻辑
+    const { getFavoriteIcon, toggleFavorite } = useFavorite()
 
     // 监听当前播放歌曲
     watch(currentSong, newSong => {
@@ -81,6 +105,7 @@ export default {
       if (!newSong.id || !newSong.url) {
         return
       }
+      currentTime.value = 0
       // 歌曲加载状态置为未完成 false
       songReady.value = false
       const audioEl = audioRef.value
@@ -179,6 +204,12 @@ export default {
     function error() {
       songReady.value = true
     }
+
+    function updateTime(e) {
+      currentTime.value = e.target.currentTime
+    }
+
+
     return {
       error,
       disableCls,
@@ -194,8 +225,12 @@ export default {
       currentSong,
       modeIcon,
       changeMode,
-      getFavoriteIcon, 
-      toggleFavorite
+      getFavoriteIcon,
+      toggleFavorite,
+      updateTime,
+      currentTime,
+      progress,
+      formatTime
     }
   }
 }
@@ -476,4 +511,5 @@ export default {
       }
     }
   }
-}</style>
+}
+</style>
