@@ -16,6 +16,7 @@
 </template>
 
 <script>
+// 进度条按钮默认宽度
 const progressBarWidth = 16
 
 export default {
@@ -46,6 +47,7 @@ export default {
     }
   },
   created() {
+    // 拖动进度条按钮相关信息
     this.touch = {}
   },
   methods: {
@@ -64,6 +66,13 @@ export default {
     onTouchEnd() {
       const barWidth = this.$el.clientWidth - progressBarWidth
       const progress = this.$refs.progress.clientWidth / barWidth
+      this.$emit("progress-changed", progress)
+    },
+    onClick(e) {
+      const rect = this.$el.getBoundingClientRect()
+      const offsetWidth = e.pageX - rect.left
+      const barWidth = this.$el.clientWidth - progressBarWidth
+      const progress = offsetWidth / barWidth
       this.$emit("progress-changed", progress)
     }
   },

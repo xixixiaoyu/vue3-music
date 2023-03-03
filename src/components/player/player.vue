@@ -63,6 +63,7 @@ import ProgressBar from './progress-bar'
 import { formatTime } from '@/assets/js/util'
 import { PLAY_MODE } from '@/assets/js/constant'
 
+let progressChanging = false
 export default {
   name: 'player',
   components: {
@@ -99,6 +100,8 @@ export default {
     const progress = computed(() => {
       return currentTime.value / currentSong.value.duration
     })
+    // 当前播放模式
+    const playMode = computed(() => store.state.playMode)
 
     // 封装切换播放模式逻辑
     const { modeIcon, changeMode } = useMode()
@@ -199,6 +202,7 @@ export default {
       const audioEl = audioRef.value
       audioEl.currentTime = 0
       audioEl.play()
+      store.commit('setPlayingState', true)
     }
     // 歌曲加载完成允许播放触发事件
     function ready() {
@@ -213,9 +217,32 @@ export default {
     }
 
     function updateTime(e) {
+      if(progressChanging) return
       currentTime.value = e.target.currentTime
     }
 
+    function onProgressChanging(progress) {
+      progressChanging = true
+      currentTime.value = currentSong.value.duration * progress
+    }
+
+    function onProgressChanged(progress) {
+      progressChanging = false
+      audioRef.value.currentTime =  currentTime.value = currentSong.value.duration * progress
+      if(!playing.value) {
+        store.commit('setPlayingState', true)
+      }
+    }
+
+    function end() {
+      // 当前播放时间置0
+      currentTime.value = 0
+      if(PLAY_MODE.loop === playMode.value) {
+        loop()
+      }else {
+        next()
+      }
+    }
 
     return {
       error,
@@ -237,7 +264,10 @@ export default {
       updateTime,
       currentTime,
       progress,
-      formatTime
+      formatTime,
+      onProgressChanging,
+      onProgressChanged,
+      end
     }
   }
 }
