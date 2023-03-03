@@ -77,6 +77,7 @@ import ProgressBar from './progress-bar'
 import { formatTime } from '@/assets/js/util'
 import { PLAY_MODE } from '@/assets/js/constant'
 import useCd from './use-cd'
+import useLyric from './use-lyric'
 
 let progressChanging = false
 export default {
@@ -126,6 +127,8 @@ export default {
 
     // 封装旋转图片逻辑
     const { cdCls, cdRef, cdImageRef } = useCd()
+
+    useLyric()
 
     // 监听当前播放歌曲
     watch(currentSong, newSong => {
