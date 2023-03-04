@@ -125,6 +125,7 @@ import { formatTime } from '@/assets/js/util'
 import { PLAY_MODE } from '@/assets/js/constant'
 import useCd from './use-cd'
 import useLyric from './use-lyric'
+import useMiddleInteractive from './use-middle-interactive'
 import Scroll from '@/components/base/scroll/scroll'
 
 let progressChanging = false
@@ -191,6 +192,16 @@ export default {
       songReady,
       currentTime
     })
+
+    // 左右滑动切换视图的逻辑
+    const {
+      currentShow,
+      middleLStyle,
+      middleRStyle,
+      onMiddleTouchStart,
+      onMiddleTouchMove,
+      onMiddleTouchEnd
+    } = useMiddleInteractive()
 
 
     // 监听当前播放歌曲
@@ -377,6 +388,13 @@ export default {
       playingLyric,
       lyricScrollRef,
       lyricListRef,
+      // useMiddleInteractive
+      currentShow,
+      middleLStyle,
+      middleRStyle,
+      onMiddleTouchStart,
+      onMiddleTouchMove,
+      onMiddleTouchEnd
     }
   }
 }
