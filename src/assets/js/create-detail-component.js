@@ -1,11 +1,13 @@
 import MusicList from '@/components/music-list/music-list'
-import storage from 'good-storage'
 import { processSongs } from '@/service/song'
+import storage from 'good-storage'
 
 export default function createDetailComponent(name, key, fetch) {
   return {
     name,
-    components: { MusicList },
+    components: {
+      MusicList
+    },
     props: {
       data: Object
     },
@@ -17,13 +19,18 @@ export default function createDetailComponent(name, key, fetch) {
     },
     computed: {
       computedData() {
+        // 从会话缓存中获取歌手数据
         let ret = null
         const data = this.data
         if (data) {
           ret = data
         } else {
           const cached = storage.session.get(key)
-          if (cached && (cached.mid || cached.id + '') === this.$route.params.id) {
+          // 会话缓存中id与当前页面id一致则读取会话缓存
+          if (
+            cached &&
+            (cached.mid || cached.id + '') === this.$route.params.id
+          ) {
             ret = cached
           }
         }
@@ -40,6 +47,7 @@ export default function createDetailComponent(name, key, fetch) {
     },
     async created() {
       const data = this.computedData
+      // 无数据时直接退回上级路由
       if (!data) {
         const path = this.$route.matched[0].path
         this.$router.push({
@@ -47,6 +55,7 @@ export default function createDetailComponent(name, key, fetch) {
         })
         return
       }
+      // 获取歌手详情页数据
       const result = await fetch(data)
       this.songs = await processSongs(result.songs)
       this.loading = false
