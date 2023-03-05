@@ -1,5 +1,5 @@
 <template>
-  <div class="player">
+  <div class="player" v-show="playlist.length">
     <transition
       name="normal"
       @enter="enter"
@@ -116,23 +116,27 @@
 </template>
 
 <script>
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import useMode from './use-mode'
+import useCD from './use-cd'
 import useFavorite from './use-favorite'
-import ProgressBar from './progress-bar'
+import useLyric from './use-lyric'
+// import useAnimation from './use-animation'
+import useMiddleInteractive from './use-middle-interactive'
+// import usePlayHistory from './use-play-history'
 import { formatTime } from '@/assets/js/util'
 import { PLAY_MODE } from '@/assets/js/constant'
-import useCd from './use-cd'
-import useLyric from './use-lyric'
-import useMiddleInteractive from './use-middle-interactive'
+import ProgressBar from './progress-bar'
+import MiniPlayer from './mini-player'
 import Scroll from '@/components/base/scroll/scroll'
-
+// 当前进度条是否正在拖动
 let progressChanging = false
 export default {
   name: 'player',
   components: {
     ProgressBar,
+    MiniPlayer,
     Scroll
   },
   setup() {
@@ -140,9 +144,11 @@ export default {
     const store = useStore()
     // 播放器dom
     const audioRef = ref(null)
+    // 进度条dom
+    const barRef = ref(null)
     // 歌曲加载部分加载是否完成
     const songReady = ref(false)
-    // 当前播放时间
+    // 当前播放事件
     const currentTime = ref(0)
     // 全屏模式
     const fullScreen = computed(() => store.state.fullScreen)
@@ -158,28 +164,37 @@ export default {
     const playIcon = computed(() => {
       return playing.value ? 'icon-pause' : 'icon-play'
     })
+    // 当前播放模式
+    const playMode = computed(() => store.state.playMode)
+    // 当前播放进度
+    const progress = computed(() => {
+      return currentTime.value === 0
+        ? 0
+        : currentTime.value / currentSong.value.duration
+    })
     // 按钮禁用class
     const disableCls = computed(() => {
       return songReady.value ? '' : 'disable'
     })
-    // 当前播放进度
-    const progress = computed(() => {
-      return currentTime.value / currentSong.value.duration
-    })
-    // 当前播放模式
-    const playMode = computed(() => store.state.playMode)
-
     // 封装切换播放模式逻辑
     const { modeIcon, changeMode } = useMode()
-
     // 封装收藏逻辑
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
-
     // 封装旋转图片逻辑
-    const { cdCls, cdRef, cdImageRef } = useCd()
-
-     // 封装歌词逻辑
-     const {
+    const { cdCls, cdRef, cdImageRef } = useCD()
+    // 封装cd歌词切换逻辑
+    const {
+      currentShow,
+      middleLStyle,
+      middleRStyle,
+      onMiddleTouchStart,
+      onMiddleTouchMove,
+      onMiddleTouchEnd
+    } = useMiddleInteractive()
+    // 封装保存播放历史记录逻辑
+    // const { savePlay } = usePlayHistory()
+    // 封装歌词逻辑
+    const {
       currentLyric,
       currentLineNum,
       pureMusicLyric,
@@ -192,24 +207,21 @@ export default {
       songReady,
       currentTime
     })
-
-    // 左右滑动切换视图的逻辑
-    const {
-      currentShow,
-      middleLStyle,
-      middleRStyle,
-      onMiddleTouchStart,
-      onMiddleTouchMove,
-      onMiddleTouchEnd
-    } = useMiddleInteractive()
-
-
+    // 封装切换全屏 - mini播放器动画逻辑
+    // const {
+    //   cdWrapperRef,
+    //   enter,
+    //   afterEnter,
+    //   leave,
+    //   afterLeave
+    // } = useAnimation()
     // 监听当前播放歌曲
     watch(currentSong, newSong => {
       // 歌曲不存在或无法播放返回
       if (!newSong.id || !newSong.url) {
         return
       }
+      // 播放事件归零
       currentTime.value = 0
       // 歌曲加载状态置为未完成 false
       songReady.value = false
@@ -220,7 +232,6 @@ export default {
       // 当前歌曲切换时播放歌曲
       store.commit('setPlayingState', true)
     })
-
     // 监听播放状态
     watch(playing, newPlaying => {
       // 加载未完成直接返回
@@ -231,13 +242,22 @@ export default {
         return
       }
       const audioEl = audioRef.value
-      // 切换播放暂停，歌词跟随播放状态
-      if(newPlaying) {
+      // 切换播放暂停，歌词滚动跟随播放状态
+      if (newPlaying) {
         audioEl.play()
         playLyric()
       } else {
         audioEl.pause()
         stopLyric()
+      }
+    })
+    // 监听全屏播放器展示状态
+    watch(fullScreen, async newFullScreen => {
+      // 开启全屏播放时，更新进度条播放进度
+      if (newFullScreen) {
+        // dom更新后再更新播放进度
+        await nextTick()
+        barRef.value.setOffset(progress.value)
       }
     })
     // 收起全屏
@@ -271,10 +291,6 @@ export default {
         }
         // 修改当前播放歌曲索引
         store.commit('setCurrentIndex', index)
-        // 在暂停状态切换歌曲则播放歌曲
-        if (!playing.value) {
-          store.commit('setPlayingState', true)
-        }
       }
     }
     // 播放下一首歌曲
@@ -295,10 +311,6 @@ export default {
         }
         // 修改当前播放歌曲索引
         store.commit('setCurrentIndex', index)
-        // 在暂停状态切换歌曲则播放歌曲
-        if (!playing.value) {
-          store.commit('setPlayingState', true)
-        }
       }
     }
     // 循环播放
@@ -315,17 +327,31 @@ export default {
       }
       songReady.value = true
       playLyric()
+      // 歌曲准备播放时保存播放历史记录
+      // savePlay(currentSong.value)
     }
     // 歌曲加载错误触发事件，将加载状态置为结束
     function error() {
       songReady.value = true
     }
-
+    // 播放进度事件触发
     function updateTime(e) {
-      if(progressChanging) return
-      currentTime.value = e.target.currentTime
+      // 正在拖动进度条则不修改当前播放时间
+      if (!progressChanging) {
+        currentTime.value = e.target.currentTime
+      }
     }
-
+    // 播放结束时根据播放模式切换歌曲
+    function end() {
+      // 当前播放时间置0
+      currentTime.value = 0
+      if (playMode.value === PLAY_MODE.loop) {
+        loop()
+      } else {
+        next()
+      }
+    }
+    // 拖动歌曲进度条按钮触发事件
     function onProgressChanging(progress) {
       progressChanging = true
       currentTime.value = currentSong.value.duration * progress
@@ -334,28 +360,25 @@ export default {
       playLyric()
       stopLyric()
     }
-
+    // 进度条按钮拖动结束触发事件
     function onProgressChanged(progress) {
       progressChanging = false
-      audioRef.value.currentTime =  currentTime.value = currentSong.value.duration * progress
-      if(!playing.value) {
+      // 设置audio的当前播放时间
+      audioRef.value.currentTime = currentTime.value =
+        currentSong.value.duration * progress
+      // 暂停状态下切换进度直接播放
+      if (!playing.value) {
         store.commit('setPlayingState', true)
       }
       // 拖动结束时滚动歌词
       playLyric()
     }
-
-    function end() {
-      // 当前播放时间置0
-      currentTime.value = 0
-      if(PLAY_MODE.loop === playMode.value) {
-        loop()
-      }else {
-        next()
-      }
-    }
-
     return {
+      playlist,
+      end,
+      onProgressChanging,
+      onProgressChanged,
+      updateTime,
       error,
       disableCls,
       ready,
@@ -366,22 +389,23 @@ export default {
       togglePlay,
       goBack,
       audioRef,
+      barRef,
       fullScreen,
       currentSong,
+      progress,
+      currentTime,
+      formatTime,
+      // useMode
       modeIcon,
       changeMode,
+      // useFavorite
       getFavoriteIcon,
       toggleFavorite,
-      updateTime,
-      currentTime,
-      progress,
-      formatTime,
-      onProgressChanging,
-      onProgressChanged,
-      end,
+      // useCD
       cdCls,
       cdRef,
       cdImageRef,
+      // useLyric
       currentLyric,
       currentLineNum,
       pureMusicLyric,
@@ -394,7 +418,13 @@ export default {
       middleRStyle,
       onMiddleTouchStart,
       onMiddleTouchMove,
-      onMiddleTouchEnd
+      onMiddleTouchEnd,
+      // useAnimation
+      // cdWrapperRef,
+      // enter,
+      // afterEnter,
+      // leave,
+      // afterLeave
     }
   }
 }
