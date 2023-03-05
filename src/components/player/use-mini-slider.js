@@ -1,4 +1,13 @@
-import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import {
+  computed,
+  ref,
+  watch,
+  onMounted,
+  onUnmounted,
+  onActivated,
+  onDeactivated,
+  nextTick
+} from 'vue'
 import { useStore } from 'vuex'
 import BScroll from '@better-scroll/core'
 import Slide from '@better-scroll/slide'
@@ -12,10 +21,9 @@ export default function useCD() {
   const fullScreen = computed(() => store.state.fullScreen)
   const playlist = computed(() => store.state.playlist)
   const currentIndex = computed(() => store.state.currentIndex)
-
   // mini slider是否展示
   const sliderShow = computed(() => {
-    return !fullScreen.value && playlist.value.length
+    return !fullScreen.value && !!playlist.value
   })
 
   onMounted(() => {
@@ -41,7 +49,6 @@ export default function useCD() {
           // slider切换结束时触发，改变播放歌曲
           sliderVal.on('slidePageChanged', ({ pageX }) => {
             store.commit('setCurrentIndex', pageX)
-            store.commit('setPlayingState', true)
           })
         } else {
           // bs实例已经存在时刷新slider
@@ -58,6 +65,14 @@ export default function useCD() {
         sliderVal.goToPage(newIndex, 0, 0)
       }
     })
+    // 监听播放列表
+    watch(playlist, async newList => {
+      // 播放列表存在，组件展示，且slider已经初始化时刷新slider
+      if (sliderVal && sliderShow.value && newList.length) {
+        await nextTick()
+        sliderVal.refresh()
+      }
+    })
   })
 
   // 组件卸载时注销slider实例
@@ -65,6 +80,15 @@ export default function useCD() {
     if (slider.value) {
       slider.value.destroy()
     }
+  })
+
+  onActivated(() => {
+    scroll.value.enable()
+    scroll.value.refresh()
+  })
+
+  onDeactivated(() => {
+    scroll.value.disable()
   })
 
   return {

@@ -1,15 +1,20 @@
 <template>
-  <div>
-    <m-header></m-header>
-    <tab></tab>
-    <router-view :style="viewStyle"></router-view>
-    <router-view :style="viewStyle" v-slot="{Component}" name="user">
-      <transition appear name="slide">
-        <component :is="Component"/>
-      </transition>
-    </router-view>
-    <player></player>
-  </div>
+  <m-header></m-header>
+  <tab></tab>
+  <!-- 路由命名视图 -->
+  <router-view :style="viewStyle" v-slot="{ Component }">
+    <keep-alive>
+      <component :is="Component" />
+    </keep-alive>
+  </router-view>
+  <router-view :style="viewStyle" name="user" v-slot="{ Component }">
+    <transition appear name="slide">
+      <keep-alive>
+        <component :is="Component" />
+      </keep-alive>
+    </transition>
+  </router-view>
+  <player></player>
 </template>
 
 <script>
