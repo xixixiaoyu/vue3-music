@@ -78,9 +78,6 @@ export default {
     },
     ...mapActions(['addSong', 'randomPlay'])
   },
-  mounted() {
-    console.log(333);
-  },
 }
 </script>
 

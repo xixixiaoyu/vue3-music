@@ -1,4 +1,4 @@
-import { PLAY_MODE, SEARCH_KEY, FAVORITE_KEY } from '../assets/js/constant'
+import { PLAY_MODE, SEARCH_KEY } from '@/assets/js/constant'
 import { load } from '@/assets/js/array-store'
 
 const state = {
@@ -15,10 +15,10 @@ const state = {
   // 播放器是否全屏
   fullScreen: false,
   // 收藏列表
-  favoriteList: load(FAVORITE_KEY),
-  // 搜索历史
+  favoriteList: [],
+  // 搜索历史记录
   searchHistory: load(SEARCH_KEY),
-  // 播放历史
+  // 播放历史记录
   playHistory: []
 }
 
