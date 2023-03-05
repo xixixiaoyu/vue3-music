@@ -122,7 +122,7 @@ import useMode from './use-mode'
 import useCD from './use-cd'
 import useFavorite from './use-favorite'
 import useLyric from './use-lyric'
-// import useAnimation from './use-animation'
+import useAnimation from './use-animation'
 import useMiddleInteractive from './use-middle-interactive'
 // import usePlayHistory from './use-play-history'
 import { formatTime } from '@/assets/js/util'
@@ -208,13 +208,13 @@ export default {
       currentTime
     })
     // 封装切换全屏 - mini播放器动画逻辑
-    // const {
-    //   cdWrapperRef,
-    //   enter,
-    //   afterEnter,
-    //   leave,
-    //   afterLeave
-    // } = useAnimation()
+    const {
+      cdWrapperRef,
+      enter,
+      afterEnter,
+      leave,
+      afterLeave
+    } = useAnimation()
     // 监听当前播放歌曲
     watch(currentSong, newSong => {
       // 歌曲不存在或无法播放返回
@@ -420,11 +420,11 @@ export default {
       onMiddleTouchMove,
       onMiddleTouchEnd,
       // useAnimation
-      // cdWrapperRef,
-      // enter,
-      // afterEnter,
-      // leave,
-      // afterLeave
+      cdWrapperRef,
+      enter,
+      afterEnter,
+      leave,
+      afterLeave
     }
   }
 }
