@@ -59,7 +59,6 @@ export default {
 
 <style lang="scss" scoped>
 .song-list {
-  padding-bottom: 30px;
   .item {
     display: flex;
     align-items: center;

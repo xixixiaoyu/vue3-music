@@ -26,6 +26,7 @@
 import { mapActions } from 'vuex'
 import Scroll from '@/components/base/scroll/scroll'
 import SongList from '@/components/base/song-list/song-list'
+import { mapState } from 'vuex'
 // 滚动到顶部时，顶部的图片覆盖距离
 const RESERVED_HEIGHT = 40
 
@@ -89,8 +90,10 @@ export default {
     },
     // 计算初始歌曲列表顶部偏移量，会等于图片的高度
     scrollStyle() {
+      const bottom = this.playlist.length ? '60px' : 0
       return {
-        top: `${this.imageHeight}px`
+        top: `${this.imageHeight}px`,
+        bottom
       }
     },
     // 根据滚动高度计算蒙层模糊样式
@@ -120,7 +123,8 @@ export default {
       return {
         display
       }
-    }
+    },
+    ...mapState(['playlist'])
   },
   mounted() {
     // 获取图片dom的高度
@@ -143,7 +147,7 @@ export default {
     random() {
       this.randomPlay(this.songs)
     },
-    ...mapActions(['selectPlay', 'randomPlay'])
+    ...mapActions(['selectPlay', 'randomPlay']),
   }
 }
 </script>
