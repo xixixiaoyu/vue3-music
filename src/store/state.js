@@ -18,6 +18,7 @@ const state = {
   favoriteList: load(FAVORITE_KEY),
   // 搜索历史
   searchHistory: load(SEARCH_KEY),
+  // 播放历史
   playHistory: []
 }
 
