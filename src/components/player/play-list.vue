@@ -107,8 +107,8 @@ export default {
         return currentSong.value.id === song.id
       })
       // listRef绑定的是transition-group，要用$el获取dom
-      const traget = listRef.value.$el.children[index]
-      scrollRef.value.scroll.scrollToElement(traget, 300)
+      const target = listRef.value.$el.children[index]
+      scrollRef.value.scroll.scrollToElement(target, 300)
     }
     // 派发移除歌曲action
     function removeSong(song) {
