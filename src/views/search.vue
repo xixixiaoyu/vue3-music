@@ -18,7 +18,7 @@
         </ul>
       </div>
     </div>
-    <div class="search-result">
+    <div class="search-result" v-show="query">
       <suggest :query="query"></suggest>
     </div>
   </div>
@@ -39,9 +39,9 @@ export default {
     // 热门搜索
     const hotKeys = ref([{ key: '郑淳元' }, { key: '单依纯' }, { key: '黄霄云' }])
     // 获取热门搜索数据
-    // getHotKeys().then(result => {
-    //   hotKeys.value = result.hotKeys
-    // })
+    getHotKeys().then(result => {
+      hotKeys.value = result.hotKeys
+    })
     // 查询热门搜索内容
     function addQuery(hotWord) {
       query.value = hotWord
