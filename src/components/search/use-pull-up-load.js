@@ -1,12 +1,12 @@
 import BScroll from '@better-scroll/core'
 import PullUp from '@better-scroll/pull-up'
 import ObserveDOM from '@better-scroll/observe-dom'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, onActivated, onDeactivated, ref } from 'vue'
 
 BScroll.use(PullUp)
 BScroll.use(ObserveDOM)
 
-export default function usePullUpLoad(requestData) {
+export default function usePullUpLoad(requestData, preventPullUpLoad) {
   const scroll = ref(null)
   const rootRef = ref(null)
   const isPullUpLoad = ref(false)
@@ -22,6 +22,11 @@ export default function usePullUpLoad(requestData) {
 
     // 上拉加载回调
     async function pullingUpHandler() {
+      // 正在执行加载，结束上拉返回
+      if (preventPullUpLoad.value) {
+        scrollVal.finishPullUp()
+        return
+      }
       isPullUpLoad.value = true
       await requestData()
       // 结束上拉，刷新scroll实例
@@ -33,6 +38,17 @@ export default function usePullUpLoad(requestData) {
   // 注销实例
   onUnmounted(() => {
     scroll.value.destroy()
+  })
+
+  // 激活实例
+  onActivated(() => {
+    scroll.value.enable()
+    scroll.value.refresh()
+  })
+
+  // 停止实例
+  onDeactivated(() => {
+    scroll.value.disable()
   })
 
   return {
