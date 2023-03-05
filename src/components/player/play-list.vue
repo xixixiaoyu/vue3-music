@@ -8,6 +8,9 @@
             <h1 class="title">
               <i class="icon" :class="modeIcon" @click="changeMode"></i>
               <span class="text">{{ modeText }}</span>
+              <span class="clear" @click="showConfirm">
+                <i class="icon-clear"></i>
+              </span>
             </h1>
           </div>
           <scroll class="list-content" ref="scrollRef">
@@ -23,16 +26,33 @@
                 <span class="favorite" @click.stop="toggleFavorite(song)">
                   <i :class="getFavoriteIcon(song)"></i>
                 </span>
-                <span class="delete" @click.stop="removeSong(song)">
+                <span
+                  class="delete"
+                  :class="{ disable: removing }"
+                  @click.stop="removeSong(song)"
+                >
                   <i class="icon-delete"></i>
                 </span>
               </li>
             </transition-group>
           </scroll>
+          <div class="list-add">
+            <div class="add" @click="showAddSong">
+              <i class="icon-add"></i>
+              <span class="text">添加歌曲到队列</span>
+            </div>
+          </div>
           <div class="list-footer" @click="hide">
             <span>关闭</span>
           </div>
         </div>
+        <confirm
+          ref="confirmRef"
+          @confirm="confirmClear"
+          text="是否清空播放列表？"
+          confirm-btn-text="清空"
+        ></confirm>
+        <add-song ref="addSongRef"></add-song>
       </div>
     </transition>
   </teleport>
@@ -44,16 +64,24 @@ import { useStore } from 'vuex'
 import useMode from './use-mode'
 import useFavorite from './use-favorite'
 import Scroll from '@/components/base/scroll/scroll'
+import Confirm from '@/components/base/confirm/confirm'
+import AddSong from '@/components/add-song/add-song'
+
 export default {
   name: 'play-list',
   components: {
-    Scroll
+    Scroll,
+    Confirm,
+    AddSong
   },
   setup() {
     const store = useStore()
     const visible = ref(false)
+    const removing = ref(false)
     const scrollRef = ref(null)
     const listRef = ref(null)
+    const confirmRef = ref(null)
+    const addSongRef = ref(null)
     const playlist = computed(() => store.state.playlist)
     const sequenceList = computed(() => store.state.sequenceList)
     const currentSong = computed(() => store.getters.currentSong)
@@ -62,9 +90,9 @@ export default {
     // 服用收藏逻辑
     const { getFavoriteIcon, toggleFavorite } = useFavorite()
     // 监听当前歌曲变化，将新的播放歌曲滚动到列表顶部
-    watch(currentSong, async () => {
+    watch(currentSong, async newSong => {
       // 组件不展示时不操作
-      if (!visible.value) {
+      if (!visible.value || !newSong.id) {
         return
       }
       // dom准备完毕再滚动
@@ -106,15 +134,46 @@ export default {
       const index = sequenceList.value.findIndex(song => {
         return currentSong.value.id === song.id
       })
+      // 未找到歌曲直接返回
+      if (index === -1) return
       // listRef绑定的是transition-group，要用$el获取dom
-      const target = listRef.value.$el.children[index]
-      scrollRef.value.scroll.scrollToElement(target, 300)
+      const traget = listRef.value.$el.children[index]
+      scrollRef.value.scroll.scrollToElement(traget, 300)
     }
     // 派发移除歌曲action
     function removeSong(song) {
+      // 防止重复点击
+      if (removing.value) {
+        return
+      }
+      removing.value = true
       store.dispatch('removeSong', song)
+      if (!playlist.value.length) {
+        hide()
+      }
+      // 删除动画执行300毫秒，300毫秒之后放开锁
+      setTimeout(() => {
+        removing.value = false
+      }, 300)
+    }
+    // 展示清空confirm
+    function showConfirm() {
+      confirmRef.value.show()
+    }
+    // 清空播放列表
+    function confirmClear() {
+      store.dispatch('clearSongList')
+      hide()
+    }
+    // 打开添加歌曲列表
+    function showAddSong() {
+      addSongRef.value.show()
     }
     return {
+      showConfirm,
+      confirmClear,
+      confirmRef,
+      removing,
       visible,
       playlist,
       sequenceList,
@@ -125,6 +184,8 @@ export default {
       listRef,
       selectItem,
       removeSong,
+      showAddSong,
+      addSongRef,
       // useMode
       modeIcon,
       changeMode,
